@@ -10,7 +10,7 @@ Este tutorial é um guia passo a passo para configurar seu primeiro servidor The
 
 
 
-## [Parte 2: Preparando o Ambiente PHP e Banco de Dados (MySql)](02.-preparando-web-e-db/)
+## [Parte 2: Preparando o Ambiente PHP e Banco de Dados (MySql)](02.-preparando-web-e-db.md)
 
 * Preparando sua VM para receber seu banco de dados e também seu site.
 *   Instalação e Configuração dos seguintes serviços:
@@ -22,7 +22,7 @@ Este tutorial é um guia passo a passo para configurar seu primeiro servidor The
 
 
 
-### [Parte 2a: Informações Adicionais sobre DB](02.-preparando-web-e-db/02a.-informacoes-adicionais.md)
+### [Parte 2a: Informações Adicionais sobre DB](02a.-informacoes-adicionais.md)
 
 * Aumentar o tamanho máximo de upload no phpMyAdmin;
 * Trocar a senha do MySql;
