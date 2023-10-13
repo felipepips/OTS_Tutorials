@@ -1,0 +1,253 @@
+# 02. Preparando Web e DB
+
+### Parte 2: Preparando o Ambiente PHP e Banco de Dados (MySql)
+
+#### Instalação do NGINX, PHP e MariaDB
+
+Comece instalando o NGINX, PHP-FPM e MariaDB com seguinte comando:
+
+```shell
+sudo apt install nginx php-fpm mariadb-server -y
+```
+
+#### Instalação do phpMyAdmin
+
+Instale o phpMyAdmin com o seguinte comando:
+
+```shell
+sudo apt install phpmyadmin -y
+```
+
+Durante a instalação, vão aparecer alguns prompts (perguntas) para você:
+
+* A primeira dela é se você deseja utilizar algum webserver para este serviço.
+  * Não selecione nenhum (aperte ESC). Pois não utilizaremos nenhum desta lista (vamos usar Nginx).
+* A segunda perta é se você deseja utilizar as configurações padrões do phpmyadmin
+  * Selecione e aperte Enter.
+* A terceira é para você informar uma senha para o phpmyadmin
+  * Informe uma senha (e repita). Anote-a.
+
+#### Verificando a Versão do PHP-FPM
+
+Você precisará da versão do PHP-FPM mais tarde, então verifique-a com este comando:
+
+```shell
+sudo php -v
+```
+
+* Vai aparecer algo como: `PHP 7.4.3-4ubuntu2.19 (cli) (built: Jun 27 2023 15:49:59) ( NTS )`
+* Mas o que nos importa aqui é esse `7.4`
+  * Quando for solicitado, posteriormente, para verificar a versão, será algo como: `php7.4-fpm`
+  * Se no seu caso a versão instalada for, por exemplo, `7.2`, você colocará `php7.2-fpm`
+
+Anote a versão do PHP-FPM para uso posterior.
+
+#### Instalação do VIM
+
+VIM é um editor de texto útil para fazer edições de configuração/arquivos de texto. Instale-o com o seguinte comando:
+
+```shell
+sudo apt install vim -y
+```
+
+#### Editando a Configuração do NGINX
+
+Aqui vamos para uma parte um pouco delicada, então, preste bastante atenção.
+
+Algumas informações sobre o editor VIM:
+
+* Ao abrir algum arquivo usando VIM, ele começa no modo "visualização" apenas.
+* Para começar a editar, aperte qualquer letra do teclado. Assim entrará no modo "edição".
+* Caso você queira selecionar tudo que tem no arquivo, após entrar no modo de edição:
+  * Aperte **ESC ou Ctrl+C** para entrar no modo "comando".
+  * Digite no teclado **ggVG** (atenção às letras maiúsculas e minúsculas).
+  * Aperte **Delete** para deletar tudo
+* Caso tenha feito alguma coisa errada, e queira sair do editor sem salvar:
+  * Aperte **ESC ou Ctrl+C**
+  * Digite `:qa`
+  * Aperte **Enter** (se der erro, digite `:qa!` e Enter)
+
+Para começar a editar o arquivo, utilize o seguinte comando:
+
+```shell
+sudo vim /etc/nginx/sites-available/default
+```
+
+Você tem 2 opções aqui:
+
+* Opção 1: Selecionar e deletar tudo que já estava no arquivo de configuração e colar toda a configuração nova.
+* Opção 2: Editar apenas as partes necessárias.
+  * Nessa segunda opção, quando a orientação for 'descomente essa linha' é porque, no arquivo original, havia um # no começo daquela linha, você deve apenas deletar este # do começo da linha.
+
+Configuração:
+
+```nginx
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server; 
+
+    root /var/www/html;
+    client_max_body_size 64M; #insira esta linha
+
+    index index.php index.html index.htm index.nginx-debian.html; #inclua index.php nessa linha
+
+    server_name _;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ { #descomente esta linha
+        include snippets/fastcgi-php.conf; #descomente esta linha
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock; #descomente esta linha (e corrija a versão do PHP, se necessário)
+    } #descomente esta linha
+}
+```
+
+Após fazer as edições necessárias:
+
+* Aperte **ESC ou Ctrl+C** para sair do modo de edição.
+* Digite `:wq` (para salvar e fechar)
+* Aperte Enter
+
+#### Reiniciando e Verificando Status do NGINX
+
+Reinicie o NGINX com o seguinte comando:
+
+```shell
+sudo systemctl restart nginx
+```
+
+Verifique o status do NGINX com o seguinte comando:
+
+```shell
+sudo systemctl status nginx
+```
+
+Se não aparecer active (running) é porque alguma coisa está errada na configuração, volte para a parte anterior e revise o arquivo de configuração do Nginx.
+
+Aperte Ctrl+C para voltar ao terminal.
+
+Agora, você já pode verificar se o Nginx está funcionando corretamente acessando:
+
+```
+http://SEUIPouDOMINIO/
+```
+
+Uma página com informações do Nginx deve aparecer.
+
+#### Criando um Arquivo de Configuração para o phpMyAdmin
+
+Crie um arquivo de configuração para o phpMyAdmin com o seguinte comando:
+
+```shell
+sudo vim /etc/nginx/sites-enabled/phpmyadmin
+```
+
+Será bem semelhante ao que fizemos no último passo, porém, desta vez, é um arquivo em branco, então, após executar o comando acima:
+
+* Aperte alguma letra do teclado para entrar no modo de edição
+* Copie o código abaixo
+* Cole no arquivo novo (clicando com o botão direito do mouse)
+
+```nginx
+server {
+    listen 2344; #porta que vai ser usada para o php-myadmin
+    server_name _;
+    root /usr/share/phpmyadmin;
+
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+
+    client_max_body_size 64M; #tamanho máximo de arquivos
+    error_page 404 @notfound;
+
+    location / {
+        index index.html index.php;
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~* \.(gif|jpg|jpeg|png|bmp|js|css)$ {
+        expires max;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock; #corrija aqui a versao do PHP, caso seja diferente
+    }
+
+    location @notfound {
+        return 404 "You're not browsing correctly.";
+        add_header Content-Type text/plain always;
+    }
+}
+```
+
+Salve e feche o arquivo da mesma maneira que fez com o arquivo de configuração do NGINX.
+
+* Esc OU Ctrl+C para sair do modo de edição
+* Digite `:wq` e Enter.
+
+#### Adicionando o Arquivo de Configuração do phpMyAdmin ao NGINX
+
+Utilizando Nginx, é uma prática comum criarmos arquivos de configuração na pasta `sites-available` e criar apenas atalhos na pasta `sites-enabled`
+
+Então agora iremos criar este atalho com o seguinte comando:
+
+```shell
+sudo ln -s /etc/nginx/sites-available/phpmyadmin /etc/nginx/sites-enabled/phpmyadmin
+```
+
+Reinicie o NGINX:
+
+```shell
+sudo systemctl restart nginx
+```
+
+E verifique novamente seu status:
+
+```shell
+sudo systemctl status nginx
+```
+
+Se não aparecer active (running) é porque alguma coisa está errada na configuração, volte para a parte anterior e revise o arquivo de configuração do phpmyadmin.
+
+Aperte Ctrl+C para voltar ao terminal.
+
+#### Acessando e Configurando o MariaDB
+
+Acesse o MariaDB com o seguinte comando:
+
+```shell
+sudo mariadb
+```
+
+Agora vamos criar um usuário (com privilégios de administrador) e uma senha para acessar o painel PhpMyAdmin;
+
+Execute os seguintes comandos:
+
+* Caso queira utilizar um nome de usuário específico, troque `otadmin` pelo que desejar.
+* Altere `SUA_SENHA` para uma senha de sua preferência.
+
+```sql
+create user 'otadmin'@'localhost' identified by 'SUA_SENHA';
+grant all privileges on *.* to 'otadmin'@'localhost';
+flush privileges;
+use mysql;
+exit;
+```
+
+Por fim, reinicie o PHP com o seguinte comando:
+
+```shell
+sudo systemctl restart php7.4-fpm
+```
+
+Agora, você já pode verificar se o phpMyAdmin está funcionando corretamente acessando:
+
+```
+http://SEUIPouDOMINIO:2344/
+```
+
+### _Pronto! Mais uma etapa concluída. Seu banco de dados já está preparado para seu novo servidor TFS._

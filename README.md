@@ -1,2 +1,3 @@
-# [OTS Tutoriais](https://github.com/felipepips/tutorials/wiki)
-- [Configurando Seu Primeiro Servidor TFS no Linux](https://github.com/felipepips/tutorials/wiki/00_Tutorial_TFS_Linux)
+# Tutoriais OTS (Open Tibia Server)
+
+* [Configurando Seu Primeiro Servidor TFS em Linux](tutoriais-ots-open-tibia-server/configurando-seu-primeiro-servidor-tfs-em-linux/)
