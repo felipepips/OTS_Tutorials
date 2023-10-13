@@ -10,7 +10,7 @@ Este tutorial é um guia passo a passo para configurar seu primeiro servidor The
 
 
 
-## [Parte 2: Preparando o Ambiente PHP e Banco de Dados (MySql)](02.-preparando-web-e-db.md)
+## [Parte 2: Preparando o Ambiente PHP e DB (Data Base)](02.-preparando-web-e-db.md)
 
 * Preparando sua VM para receber seu banco de dados e também seu site.
 *   Instalação e Configuração dos seguintes serviços:
